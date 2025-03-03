@@ -32,10 +32,14 @@ import javax.ws.rs.core.MediaType;
  * and receive responses.
  */
 @ApplicationScoped
-@Path("/")
+@Path("/chat")
 public class ChatBotResource {
 
-    private final ChatAiService chatAiService;
+    private ChatAiService chatAiService;
+
+    // Required by CDI
+    protected ChatBotResource() {
+    }
 
     /**
      * Constructs a {@code ChatBotResource} instance.
@@ -58,7 +62,6 @@ public class ChatBotResource {
      */
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    @Path("/chat")
     public String chatWithAssistant(@QueryParam("question") String question) {
         return chatAiService.chat(question);
     }
