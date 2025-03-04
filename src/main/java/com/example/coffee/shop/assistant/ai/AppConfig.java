@@ -15,6 +15,10 @@
  */
 package com.example.coffee.shop.assistant.ai;
 
+import java.io.IOException;
+import java.util.Properties;
+import java.util.logging.Logger;
+
 import com.example.coffee.shop.assistant.data.OrderService;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -29,11 +33,27 @@ import dev.langchain4j.service.AiServices;
 @ApplicationScoped
 public class AppConfig {
 
-    private static final String API_KEY = System.getProperty("api.key", "demo");
+    private static final Logger LOGGER = Logger.getLogger(AppConfig.class.getName());
+    private static final Properties CONFIG = new Properties();
+
+    static {
+        try {
+            StringBuilder builder = new StringBuilder();
+            CONFIG.load(AppConfig.class.getResourceAsStream("/ai.properties"));
+            CONFIG.forEach((key, value) -> builder.append(key + " = " + value));
+            LOGGER.info(builder.toString());
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to load ai.properties", e);
+        }
+    }
 
     @Produces
     public ChatAiService createChatAiService(OrderService orderService) {
-        OpenAiChatModel model = OpenAiChatModel.builder().apiKey(API_KEY).modelName("gpt-4o-mini").build();
+        OpenAiChatModel model = OpenAiChatModel.builder()
+                .apiKey(CONFIG.getProperty("openai.apikey"))
+                .modelName(CONFIG.getProperty("openai.model"))
+                .temperature(Double.parseDouble(CONFIG.getProperty("openai.temperature")))
+                .build();
         return AiServices.builder(ChatAiService.class).chatLanguageModel(model).tools(orderService).build();
     }
 }
